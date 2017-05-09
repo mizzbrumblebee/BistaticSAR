@@ -5,14 +5,14 @@ clear all;  clc; tic; %close all;
 
 %all distances are given in units of km
 % global c;
-c=3e8; 
+% c=3e8; 
 gpuflag = 0;
 % global gpuflag;
 % THIS SCRIPT IS PRIMARILY FOR INITIALIZATION. 
-% global c;
-% global fc;
-% global numpositions;
-% global SAR.numlevels;
+global c;
+global fc;
+global numpositions;
+global numlevels;
 % global Lp;
 % global minsamples;
 % global pl;
@@ -24,10 +24,10 @@ gpuflag = 0;
 % 
 waveformstruct.samewaveform = 'no';
 tic;
-c = 3e8; waveformstruct.fc = 728e6;
-lambda=c/waveformstruct.fc;
-SAR.numpositions = 1;
-SAR.numlevels = 35;
+c = 3e8; fc = 728e6;
+lambda=c/fc;
+numpositions = 1;
+numlevels = 35;
 
 
 time = .001; %time between collections in seconds
@@ -40,8 +40,8 @@ waveformstruct.NDLRB = [25 25 25 25 25 25];
 Elim=.01;
 waveformstruct = generateLTEWaveform(waveformstruct);
 waveformstruct.fraction = .500;
-waveformstruct.E = zeros(1,SAR.numpositions);
-waveformstruct.Ts=1/waveformstruct.SR;
+waveformstruct.E = zeros(1,numpositions);
+% waveformstruct.Ts=1/waveformstruct.SR;
 waveformstruct.dtau = 1/(waveformstruct.BW*1e6);
 dv = platformv*time;
 
@@ -66,9 +66,9 @@ map.ypositions = repmat(map.ygrid,length(map.xgrid),1);
 
 
 
-SAR.R=zeros(SAR.numpositions,2); %receiver coordinates--RIL in the center
+SAR.R=zeros(numpositions,2); %receiver coordinates--RIL in the center
 SAR.R(1,1) = 510;
-SAR.R(:,1) = arrayfun(@(r) SAR.R(1,1) + (r-1)*dv,1:SAR.numpositions);
+SAR.R(:,1) = arrayfun(@(r) SAR.R(1,1) + (r-1)*dv,1:numpositions);
 SAR.T=[0 0];
 SAR0.R = [SAR.R(1,1) 0]; SAR0.T = [0 0];
 [SAR0.RTxmtx] = getRangeMatrix(map,SAR0.T(1,1),SAR0.T(1,2));
@@ -95,13 +95,13 @@ SAR.RT0 = distanceformula(SAR.T(1,1),SAR.P0(1,1),SAR.T(1,2),SAR.P0(1,2));
 [SAR.RTxmtx] = getRangeMatrix(map,SAR.T(1,1),SAR.T(1,2));
 
 %check these variables to see where they pass through
-SAR.RxxMtx = zeros(SAR.numlevels,2*SAR.pl-1,SAR.numpositions);
+SAR.RxxMtx = zeros(numlevels,2*SAR.pl-1,numpositions);
 SAR.rxxlength = 2*SAR.pl - 1;
 
 SAR.center_sample = round(SAR.rxxlength/2);
-SAR.datamatrix = zeros(SAR.numpositions,SAR.pl);
+SAR.datamatrix = zeros(numpositions,SAR.pl);
 SAR.clutter_mtx = getClutterMap(map);
-SAR.shiftmtx = zeros(SAR.numlevels,1);
+SAR.shiftmtx = zeros(numlevels,1);
 SAR = getShiftMatrix(SAR,waveformstruct); 
 
 
@@ -128,11 +128,11 @@ fprintf('creating image2');
 
 
 pulseDoppler = fftshift(fft(SAR.datamatrix,[],1),1);
-N = SAR.numpositions;
+N = numpositions;
 dopplerarray = linspace(-N/2,N/2,N);
 
 figure
-imagesc(rangearray0,1:SAR.numpositions,abs(SAR.datamatrix))
+imagesc(rangearray0,1:numpositions,abs(SAR.datamatrix))
 title('Generated Data for 1 point scatter(s)');
 xlabel('Range (m)');
 ylabel('Pulse Number');
@@ -161,13 +161,13 @@ xlabel('X-coordinate (m)');
 ylabel('Y-coordinate (m)');
 colormap(gray(256));
 
-for n = 261:280
-    figure
-    plot(map.ximageg,abs(ImageFinal2(:,n)))
-    title('Doppler Sidelobes');
-    xlabel('x-coordinate (m)');
-    ylabel('Image intensity');
-end
+% for n = 261:280
+%     figure
+%     plot(map.ximageg,abs(ImageFinal2(:,n)))
+%     title('Doppler Sidelobes');
+%     xlabel('x-coordinate (m)');
+%     ylabel('Image intensity');
+% end
 t = datestr(now,30);
 t3 =strcat(t,'.mat');
 K = SAR.datamatrix;
