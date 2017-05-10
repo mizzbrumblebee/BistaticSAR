@@ -8,11 +8,11 @@ function [waveformstruct,SAR] = getRxx(SAR,waveformstruct)
 
     
     %find peak value (norm)
-    waveformstruct.hp=conj(fliplr(waveformstruct.pulse));
-    RHSp=conv(waveformstruct.hp,waveformstruct.pulse);
+    hp=conj(fliplr(waveformstruct.pulse));
+    RHSp=conv(hp,waveformstruct.pulse);
     waveformstruct.E= real(max(RHSp));
     
-    SAR.RxxMtx=conv(waveformstruct.pulse,waveformstruct.hp)/waveformstruct.E;
+    SAR.RxxMtx=RHSp/waveformstruct.E;
     
 end
 

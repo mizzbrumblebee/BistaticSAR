@@ -1,6 +1,4 @@
 function [ImageFinal,SAR,C,map] = getImage(SAR,waveformstruct,map,gpuflag)
-%UNTITLED2 Summary of this function goes here
-%   Detailed explanation goes here
 
 global c fc numpositions
 
@@ -9,23 +7,10 @@ if gpuflag ==1
 else
     G = @(x) x;
 end
-% global numpositions fc Lp RBmin RBmax
-% c = 3e8;
-% SAR.numpositions = G(SAR.numpositions);
-% SAR.AF = G(SAR.AF);
-% SAR.RB = G(SAR.RB);
-% waveformstruct.fc = G(waveformstruct.fc);
-% SAR.minrange = G(SAR.minrange);
-% SAR.maxrange = G(SAR.maxrange);
-% SAR.Lp = G(SAR.Lp);
-SAR.rangearray = G(SAR.rangearray);
 
-% xfinal = map.xgrid(1,501);
-% map.ximageg = map.xgrid(1,1):2:map.xgrid(1,100); map.yimageg = map.ygrid(1,400):2:map.ygrid(1,501);
-% map.ximage = repmat(map.ximageg.',1,length(map.yimageg));
-% map.yimage = repmat(map.yimageg,length(map.ximageg),1);
-% 
-% SAR.RBT = rangeMatrixSARImage(map,SAR.T(1,1),SAR.T(1,2));
+SAR.rangearray = G(SAR.rangearray);
+SAR.datamatrix2 = G(SAR.datamatrix2);
+
 minrange = SAR.RBmin - (c*waveformstruct.dtau/2);
 maxrange = SAR.RBmax - (c*waveformstruct.dtau/2);
 map.ximage = repmat(map.xgridi.',1,length(map.ygridi));
@@ -47,62 +32,22 @@ for a1 = 1:numpositions
     rangeprofile = SAR.datamatrix2(a1,:);
 %     rangematrix1 = SAR.RBI - SAR.R0all;
 %     rangematrix1 = SAR.RBI1;
-%     if a1 ==1
-%         SAR.rangematrix1 = rangematrix1;
-%     end
-        
-    %     rangevec = fouriervec*Wx/SAR.bplength;
-    phasecorrect = exp(k*rangematrix1);
-% for a4 = 1:length(SAR.rangearray)
-%     rangeprofile = fftshift(ifft(matchedfilter(:,a1),SAR.bplength));
 
+    phasecorrect = exp(k*rangematrix1);
+    
     d = rangematrix1 > minrange;
     d2 = rangematrix1 < maxrange;
-
     Image = find(and(d,d2));
-%     Image = G(Image);
-%         B = any(Image(:));
-%         if B ==1
-%         Image = find(rangematrix1 == SAR.RB(101,101,a1));
-%         Image1(1:length(Image),a4,a1) = Image;
-    i1 = interp1(SAR.rangearray,rangeprofile,rangematrix1(Image),'linear');
 
-%         if a4 == 30
-%            figure
-%            imagesc(rangematrix1(Image))
-%         end
-% %         if any(i1)
-%            disp(a4); 
-%         end
-%         if i1 ~= 0
-%            disp(a1); disp(a4); 
-%         end
+    i1 = interp1(SAR.rangearray,rangeprofile,rangematrix1(Image),'linear');     
     p = phasecorrect(Image);
-%         p = 1;
-
-%         if length(i1) ~= length(p)
-%             if length(i1) > length(p)
-%                 i1 = i1(1:length(p));
-%             else
-%                 p = p(1:length(i1));
-%             end
-%         end
-
     ImageFinal(Image) = ImageFinal(Image) + i1.*p;
-%         end
-%         disp(size(ImageFinal(Image)));
-%     rImageFinal = ImageFinal + i1.*p;
-%         disp(clock);
-
-% end      
+%         
     disp(a1);
     elapsedtime = toc;
     format shortg;
     disp(elapsedtime);
 end
-
-
 C = gather(G);
-
 end
 

@@ -29,7 +29,6 @@ lambda=c/fc;
 numpositions = 1;
 numlevels = 35;
 
-
 time = .001; %time between collections in seconds
 %platform speed
 platformv=100; %approximate target speed is 70 mph, which is .031 km/s 
@@ -45,11 +44,6 @@ waveformstruct.E = zeros(1,numpositions);
 waveformstruct.dtau = 1/(waveformstruct.BW*1e6);
 dv = platformv*time;
 
-
-
-%sets up moving platform
-
-
 %FOR ORIGINAL CASE X AND Y INITIAL ARE BOTH 1000
 map.yinitial = 1000;
 map.xinitial = 0; %make 0 for side looking
@@ -63,22 +57,19 @@ map.ygridi=(0:4*map.gspacing:map.gspacing*map.elements) + map.yinitial;
 map.xpositions = repmat(map.xgrid.',1,length(map.ygrid));
 map.ypositions = repmat(map.ygrid,length(map.xgrid),1);
 
-
-
-
 SAR.R=zeros(numpositions,2); %receiver coordinates--RIL in the center
 SAR.R(1,1) = 510;
 SAR.R(:,1) = arrayfun(@(r) SAR.R(1,1) + (r-1)*dv,1:numpositions);
 SAR.T=[0 0];
-SAR0.R = [SAR.R(1,1) 0]; SAR0.T = [0 0];
-[SAR0.RTxmtx] = getRangeMatrix(map,SAR0.T(1,1),SAR0.T(1,2));
-[SAR0.RRxmtx] = getRangeMatrix(map,SAR0.R(1,1),SAR0.R(1,2));
-SAR0.distance = SAR0.RTxmtx + SAR0.RRxmtx;
-SAR.RBmax = max(SAR0.distance(:));
-taup = SAR0.distance/c;
+rSAR0 = [SAR.R(1,1) 0]; tSAR0 = [0 0];
+[RTxmtx0] = getRangeMatrix(map,tSAR0(1,1),tSAR0(1,2));
+[RRxmtx0] = getRangeMatrix(map,rSAR0(1,1),rSAR0(1,2));
+sarDistance = RTxmtx0 + RRxmtx0;
+SAR.RBmax = max(sarDistance(:));
+taup = sarDistance/c;
 taumax=max(taup(:)); 
 taumin = min(taup(:));
-SAR.RBmin = min(SAR0.distance(:));%use this for maximum time delay
+SAR.RBmin = min(sarDistance(:));%use this for maximum time delay
 
 
 SAR.Lp = floor(taumax.*1/waveformstruct.dtau);
@@ -113,9 +104,6 @@ elapsedtime = toc;
 format shortg;
 disp(elapsedtime);
 
-
-
-
 gpuflag = 0;
 rangearray0 = linspace(SAR.RBmin,SAR.RBmax,SAR.pl);
 SAR.rangearray = linspace(SAR.RBmin,SAR.RBmax,10*SAR.pl);
@@ -125,7 +113,6 @@ fprintf('creating Image1');
 fprintf('creating image2');
 % ImageFinal2 = 0;
 [ImageFinal2,SAR,C,map] = getZoomedInImage(SAR,waveformstruct,map,gpuflag);
-
 
 pulseDoppler = fftshift(fft(SAR.datamatrix,[],1),1);
 N = numpositions;

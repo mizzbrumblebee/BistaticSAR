@@ -1,10 +1,10 @@
 function [SAR,waveformstruct] = getDataMatrix(waveformstruct,SAR,map)
 
-% global numpositions 
-c = 3e8;
-k = 2*pi*waveformstruct.fc/3e8;
+global numpositions c numlevels fc
+% c = 3e8;
+k = 2*pi*fc/c;
 rxydata = zeros(1,2*SAR.pl-1);
-for r = 1:SAR.numpositions
+for r = 1:numpositions
     
     if r ==1   
 %         toc;
@@ -42,22 +42,22 @@ for r = 1:SAR.numpositions
             if B == 1 %why bother doing this math if contour is empty
             %quantize that value
 %             SAR.a4 = SAR.a2(SAR.contour)/(c*waveformstruct.dtau/SAR.SAR.numlevels);
-            a3 = round((a2(contour)/(c*waveformstruct.dtau/SAR.numlevels))) + round(SAR.numlevels/2);
-            aq = abs(a3 - (SAR.numlevels+1));
+            a3 = round((a2(contour)/(c*waveformstruct.dtau/numlevels))) + round(numlevels/2);
+            aq = abs(a3 - (numlevels+1));
 %             R1 = RB(:,:,r);
             ranges = RB(contour);
             
             %find RCS Constants corresponding to contour
             temp3 = SAR.clutter_mtx(contour).*exp(-1*1j*k*ranges);
-            if SAR.numlevels ==1
+            if numlevels ==1
                A = logical(aq);
                constantsum = sum(temp3(A)); 
                rxydata = constantsum.*SAR.RxyMtx; 
             else
-                idx = arrayfun(@(m3) (aq == m3),1:SAR.numlevels,'uni',false);
+                idx = arrayfun(@(m3) (aq == m3),1:numlevels,'uni',false);
                 idx = cat(2,idx{:});
-                constants = arrayfun(@(m3) temp3(idx(:,m3)),1:SAR.numlevels,'uni',false);
-                constantsum = arrayfun(@(m3) sum(constants{m3}),1:SAR.numlevels);
+                constants = arrayfun(@(m3) temp3(idx(:,m3)),1:numlevels,'uni',false);
+                constantsum = arrayfun(@(m3) sum(constants{m3}),1:numlevels);
                 rxydata = sum(bsxfun(@times,constantsum.',SAR.RxyMtx));   
             end
             %return matrix * phase correction
